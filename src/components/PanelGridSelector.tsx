@@ -1,5 +1,5 @@
 
-import { Grid2X2, Grid3X3, LayoutHorizontal, LayoutVertical, Settings } from 'lucide-react';
+import { Grid2X2, Grid3X3, LayoutPanelLeft, LayoutPanelTop, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PanelGridSelectorProps {
@@ -11,8 +11,8 @@ const PanelGridSelector = ({ selectedLayout, onSelectLayout }: PanelGridSelector
   const layouts = [
     { id: '2x2', icon: <Grid2X2 size={18} />, label: '2×2 Grid' },
     { id: '3x3', icon: <Grid3X3 size={18} />, label: '3×3 Grid' },
-    { id: '1x3', icon: <LayoutVertical size={18} />, label: 'Vertical' },
-    { id: '3x1', icon: <LayoutHorizontal size={18} />, label: 'Horizontal' },
+    { id: '1x3', icon: <LayoutPanelLeft size={18} />, label: 'Vertical' },
+    { id: '3x1', icon: <LayoutPanelTop size={18} />, label: 'Horizontal' },
     { id: 'custom', icon: <Settings size={18} />, label: 'Custom' }
   ];
 
