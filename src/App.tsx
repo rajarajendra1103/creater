@@ -1,9 +1,15 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import Index from "./pages/Index";
+import Generator from "./pages/Generator";
+import Canvas from "./pages/Canvas";
+import Upload from "./pages/Upload";
+import Character from "./pages/Character";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -12,11 +18,15 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <Sonner />
+      <Sonner position="top-right" closeButton expandByDefault />
       <BrowserRouter>
+        <Navbar />
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/generator" element={<Generator />} />
+          <Route path="/canvas" element={<Canvas />} />
+          <Route path="/upload" element={<Upload />} />
+          <Route path="/character" element={<Character />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
