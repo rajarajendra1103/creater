@@ -10,6 +10,7 @@ import Generator from "./pages/Generator";
 import Canvas from "./pages/Canvas";
 import Upload from "./pages/Upload";
 import Character from "./pages/Character";
+import MangaPanel from "./pages/MangaPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/canvas" element={<Canvas />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/character" element={<Character />} />
+          <Route path="/panel" element={<MangaPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
