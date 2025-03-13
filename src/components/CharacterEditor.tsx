@@ -6,30 +6,94 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
-import { Download, Undo2, Redo2, RefreshCw } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Download, Undo2, Redo2, RefreshCw, ChevronDown, User, Shirt, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import Loading from '@/components/ui/Loading';
 
-const bodyPartOptions = {
-  head: ['Round', 'Square', 'Heart-shaped', 'Oval'],
-  eyes: ['Large Round', 'Sharp', 'Droopy', 'Small'],
-  hair: ['Short Spiky', 'Long Straight', 'Wavy', 'Ponytail'],
-  outfit: ['School Uniform', 'Casual', 'Fantasy', 'Futuristic']
+// Expanded options for character design
+const headShapeOptions = [
+  'Round', 'Oval', 'Square', 'Heart', 'Triangle', 'Diamond', 'Rectangular'
+];
+
+const eyeStyleOptions = {
+  male: ['Sharp', 'Narrow', 'Small', 'Focused', 'Serious'],
+  female: ['Large Round', 'Expressive', 'Wide', 'Sparkly', 'Gentle']
 };
 
-const emotionOptions = ['Neutral', 'Happy', 'Sad', 'Angry', 'Surprised', 'Thoughtful'];
+const hairStyleOptions = {
+  male: {
+    short: ['Buzz Cut', 'Crew Cut', 'Caesar Cut', 'Spiky Hair'],
+    medium: ['Textured Crop', 'Side Part', 'Shaggy Hair'],
+    long: ['Straight and Flowing', 'Wavy', 'Ponytail', 'Man Bun'],
+    unconventional: ['Undercut', 'Mohawk', 'Dreadlocks']
+  },
+  female: {
+    short: ['Pixie Cut', 'Bob Cut', 'Asymmetrical Cut'],
+    medium: ['Layered Cut', 'Wavy Lob', 'Braided Styles'],
+    long: ['Straight and Sleek', 'Wavy or Curly', 'Twintails', 'Hime Cut'],
+    unconventional: ['Space Buns', 'Side Shave', 'Fantasy Styles']
+  }
+};
+
+const facialHairOptions = [
+  'Clean-Shaven', 'Stubble', 'Thin Mustache', 'Thick Mustache', 
+  'Goatee', 'Full Beard', 'Sideburns', 'Soul Patch'
+];
+
+const outfitOptions = {
+  male: ['Casual', 'Formal', 'School Uniform', 'Athletic', 'Fantasy', 'Sci-Fi', 'Military'],
+  female: ['Casual', 'Formal', 'School Uniform', 'Athletic', 'Fantasy', 'Sci-Fi', 'Elegant']
+};
+
+const bodyProportionOptions = {
+  male: ['Athletic', 'Muscular', 'Slender', 'Stocky', 'Average'],
+  female: ['Hourglass', 'Slender', 'Athletic', 'Petite', 'Curvy']
+};
+
+const emotionOptions = ['Neutral', 'Happy', 'Sad', 'Angry', 'Surprised', 'Thoughtful', 'Determined', 'Shy'];
 
 const CharacterEditor = () => {
   const [gender, setGender] = useState('female');
-  const [head, setHead] = useState(bodyPartOptions.head[0]);
-  const [eyes, setEyes] = useState(bodyPartOptions.eyes[0]);
-  const [hair, setHair] = useState(bodyPartOptions.hair[0]);
-  const [outfit, setOutfit] = useState(bodyPartOptions.outfit[0]);
-  const [emotion, setEmotion] = useState(emotionOptions[0]);
-  const [age, setAge] = useState(18);
   const [name, setName] = useState('');
+  const [age, setAge] = useState(18);
+  
+  // Head & Face options
+  const [headShape, setHeadShape] = useState(headShapeOptions[0]);
+  const [eyeStyle, setEyeStyle] = useState('');
+  const [hairLength, setHairLength] = useState('medium');
+  const [hairStyle, setHairStyle] = useState('');
+  const [facialHair, setFacialHair] = useState('Clean-Shaven');
+  
+  // Body options
+  const [bodyProportion, setBodyProportion] = useState('');
+  const [height, setHeight] = useState(170);
+  
+  // Style options
+  const [outfit, setOutfit] = useState('');
+  const [emotion, setEmotion] = useState(emotionOptions[0]);
+  
   const [isGenerating, setIsGenerating] = useState(false);
   const [characterImageUrl, setCharacterImageUrl] = useState<string | null>(null);
+  
+  // State for collapsible sections
+  const [headSectionOpen, setHeadSectionOpen] = useState(true);
+  const [bodySectionOpen, setBodySectionOpen] = useState(false);
+  const [styleSectionOpen, setStyleSectionOpen] = useState(false);
+
+  // Update dependent options when gender changes
+  React.useEffect(() => {
+    setEyeStyle(eyeStyleOptions[gender as keyof typeof eyeStyleOptions][0]);
+    setHairStyle(hairStyleOptions[gender as keyof typeof hairStyleOptions][hairLength][0]);
+    setOutfit(outfitOptions[gender as keyof typeof outfitOptions][0]);
+    setBodyProportion(bodyProportionOptions[gender as keyof typeof bodyProportionOptions][0]);
+    
+    // Reset facial hair for female characters
+    if (gender === 'female') {
+      setFacialHair('Clean-Shaven');
+    }
+  }, [gender, hairLength]);
 
   const generateCharacter = async () => {
     setIsGenerating(true);
@@ -77,12 +141,35 @@ const CharacterEditor = () => {
   };
 
   const randomizeCharacter = () => {
-    setHead(bodyPartOptions.head[Math.floor(Math.random() * bodyPartOptions.head.length)]);
-    setEyes(bodyPartOptions.eyes[Math.floor(Math.random() * bodyPartOptions.eyes.length)]);
-    setHair(bodyPartOptions.hair[Math.floor(Math.random() * bodyPartOptions.hair.length)]);
-    setOutfit(bodyPartOptions.outfit[Math.floor(Math.random() * bodyPartOptions.outfit.length)]);
-    setEmotion(emotionOptions[Math.floor(Math.random() * emotionOptions.length)]);
+    // Randomize all character attributes
+    const randomGender = Math.random() > 0.5 ? 'male' : 'female';
+    setGender(randomGender);
+    
+    // Randomize basic attributes
     setAge(Math.floor(Math.random() * 30) + 10);
+    
+    // Randomize head & face
+    setHeadShape(headShapeOptions[Math.floor(Math.random() * headShapeOptions.length)]);
+    
+    const randomHairLength = ['short', 'medium', 'long', 'unconventional'][Math.floor(Math.random() * 4)];
+    setHairLength(randomHairLength);
+    
+    setEyeStyle(eyeStyleOptions[randomGender][Math.floor(Math.random() * eyeStyleOptions[randomGender].length)]);
+    
+    const randomHairOptions = hairStyleOptions[randomGender][randomHairLength];
+    setHairStyle(randomHairOptions[Math.floor(Math.random() * randomHairOptions.length)]);
+    
+    if (randomGender === 'male') {
+      setFacialHair(facialHairOptions[Math.floor(Math.random() * facialHairOptions.length)]);
+    }
+    
+    // Randomize body
+    setBodyProportion(bodyProportionOptions[randomGender][Math.floor(Math.random() * bodyProportionOptions[randomGender].length)]);
+    setHeight(Math.floor(Math.random() * 40) + 150); // 150-190cm
+    
+    // Randomize style
+    setOutfit(outfitOptions[randomGender][Math.floor(Math.random() * outfitOptions[randomGender].length)]);
+    setEmotion(emotionOptions[Math.floor(Math.random() * emotionOptions.length)]);
     
     toast.info("Character randomized! Click Generate to see the result.");
   };
@@ -90,7 +177,7 @@ const CharacterEditor = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Character Options */}
-      <div className="space-y-6">
+      <div className="space-y-6 overflow-y-auto max-h-[80vh] pr-2">
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-3">Base Attributes</h3>
           
@@ -136,18 +223,32 @@ const CharacterEditor = () => {
           </div>
         </div>
         
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-3">Character Features</h3>
+        {/* Head & Face Section - Collapsible */}
+        <Collapsible 
+          open={headSectionOpen} 
+          onOpenChange={setHeadSectionOpen}
+          className="border rounded-lg p-4"
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full">
+            <div className="flex items-center">
+              <User size={18} className="mr-2" />
+              <h3 className="text-lg font-medium">Head & Face</h3>
+            </div>
+            <ChevronDown 
+              size={18} 
+              className={`transition-transform duration-200 ${headSectionOpen ? 'rotate-180' : ''}`} 
+            />
+          </CollapsibleTrigger>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CollapsibleContent className="pt-4 space-y-4">
             <div>
-              <Label htmlFor="head-select" className="mb-2 block">Head Shape</Label>
-              <Select value={head} onValueChange={setHead}>
-                <SelectTrigger id="head-select">
+              <Label htmlFor="head-shape" className="mb-2 block">Head Shape</Label>
+              <Select value={headShape} onValueChange={setHeadShape}>
+                <SelectTrigger id="head-shape">
                   <SelectValue placeholder="Select head shape" />
                 </SelectTrigger>
                 <SelectContent>
-                  {bodyPartOptions.head.map((option) => (
+                  {headShapeOptions.map((option) => (
                     <SelectItem key={option} value={option}>{option}</SelectItem>
                   ))}
                 </SelectContent>
@@ -155,13 +256,13 @@ const CharacterEditor = () => {
             </div>
             
             <div>
-              <Label htmlFor="eyes-select" className="mb-2 block">Eye Style</Label>
-              <Select value={eyes} onValueChange={setEyes}>
-                <SelectTrigger id="eyes-select">
+              <Label htmlFor="eye-style" className="mb-2 block">Eye Style</Label>
+              <Select value={eyeStyle} onValueChange={setEyeStyle}>
+                <SelectTrigger id="eye-style">
                   <SelectValue placeholder="Select eye style" />
                 </SelectTrigger>
                 <SelectContent>
-                  {bodyPartOptions.eyes.map((option) => (
+                  {eyeStyleOptions[gender as keyof typeof eyeStyleOptions].map((option) => (
                     <SelectItem key={option} value={option}>{option}</SelectItem>
                   ))}
                 </SelectContent>
@@ -169,13 +270,78 @@ const CharacterEditor = () => {
             </div>
             
             <div>
-              <Label htmlFor="hair-select" className="mb-2 block">Hair Style</Label>
-              <Select value={hair} onValueChange={setHair}>
-                <SelectTrigger id="hair-select">
+              <Label htmlFor="hair-length" className="mb-2 block">Hair Length</Label>
+              <Select value={hairLength} onValueChange={setHairLength}>
+                <SelectTrigger id="hair-length">
+                  <SelectValue placeholder="Select hair length" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="short">Short</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="long">Long</SelectItem>
+                  <SelectItem value="unconventional">Unconventional</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="hair-style" className="mb-2 block">Hair Style</Label>
+              <Select value={hairStyle} onValueChange={setHairStyle}>
+                <SelectTrigger id="hair-style">
                   <SelectValue placeholder="Select hair style" />
                 </SelectTrigger>
                 <SelectContent>
-                  {bodyPartOptions.hair.map((option) => (
+                  {hairStyleOptions[gender as keyof typeof hairStyleOptions][hairLength as keyof typeof hairStyleOptions.male].map((option) => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {gender === 'male' && (
+              <div>
+                <Label htmlFor="facial-hair" className="mb-2 block">Facial Hair</Label>
+                <Select value={facialHair} onValueChange={setFacialHair}>
+                  <SelectTrigger id="facial-hair">
+                    <SelectValue placeholder="Select facial hair" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {facialHairOptions.map((option) => (
+                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+        
+        {/* Body Section - Collapsible */}
+        <Collapsible 
+          open={bodySectionOpen} 
+          onOpenChange={setBodySectionOpen}
+          className="border rounded-lg p-4"
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full">
+            <div className="flex items-center">
+              <Shirt size={18} className="mr-2" />
+              <h3 className="text-lg font-medium">Body & Proportions</h3>
+            </div>
+            <ChevronDown 
+              size={18} 
+              className={`transition-transform duration-200 ${bodySectionOpen ? 'rotate-180' : ''}`} 
+            />
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="pt-4 space-y-4">
+            <div>
+              <Label htmlFor="body-proportion" className="mb-2 block">Body Type</Label>
+              <Select value={bodyProportion} onValueChange={setBodyProportion}>
+                <SelectTrigger id="body-proportion">
+                  <SelectValue placeholder="Select body type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bodyProportionOptions[gender as keyof typeof bodyProportionOptions].map((option) => (
                     <SelectItem key={option} value={option}>{option}</SelectItem>
                   ))}
                 </SelectContent>
@@ -183,40 +349,68 @@ const CharacterEditor = () => {
             </div>
             
             <div>
-              <Label htmlFor="outfit-select" className="mb-2 block">Outfit</Label>
+              <Label className="mb-2 block">Height: {height}cm</Label>
+              <Slider
+                value={[height]}
+                min={150}
+                max={190}
+                step={1}
+                onValueChange={(values) => setHeight(values[0])}
+                className="w-full"
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+        
+        {/* Style Section - Collapsible */}
+        <Collapsible 
+          open={styleSectionOpen} 
+          onOpenChange={setStyleSectionOpen}
+          className="border rounded-lg p-4"
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full">
+            <div className="flex items-center">
+              <Palette size={18} className="mr-2" />
+              <h3 className="text-lg font-medium">Style & Expression</h3>
+            </div>
+            <ChevronDown 
+              size={18} 
+              className={`transition-transform duration-200 ${styleSectionOpen ? 'rotate-180' : ''}`} 
+            />
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="pt-4 space-y-4">
+            <div>
+              <Label htmlFor="outfit" className="mb-2 block">Outfit</Label>
               <Select value={outfit} onValueChange={setOutfit}>
-                <SelectTrigger id="outfit-select">
+                <SelectTrigger id="outfit">
                   <SelectValue placeholder="Select outfit" />
                 </SelectTrigger>
                 <SelectContent>
-                  {bodyPartOptions.outfit.map((option) => (
+                  {outfitOptions[gender as keyof typeof outfitOptions].map((option) => (
                     <SelectItem key={option} value={option}>{option}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          </div>
-        </div>
+            
+            <div>
+              <Label htmlFor="emotion" className="mb-2 block">Expression</Label>
+              <Select value={emotion} onValueChange={setEmotion}>
+                <SelectTrigger id="emotion">
+                  <SelectValue placeholder="Select expression" />
+                </SelectTrigger>
+                <SelectContent>
+                  {emotionOptions.map((option) => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
         
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-3">Expression</h3>
-          
-          <div>
-            <Label htmlFor="emotion-select" className="mb-2 block">Emotion</Label>
-            <Select value={emotion} onValueChange={setEmotion}>
-              <SelectTrigger id="emotion-select">
-                <SelectValue placeholder="Select emotion" />
-              </SelectTrigger>
-              <SelectContent>
-                {emotionOptions.map((option) => (
-                  <SelectItem key={option} value={option}>{option}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <div className="flex space-x-3">
+        <div className="flex space-x-3 pt-4">
           <Button 
             variant="outline" 
             className="flex-1"
