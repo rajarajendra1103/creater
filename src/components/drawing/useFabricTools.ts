@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { fabric } from 'fabric';
 import { toast } from 'sonner';
@@ -9,6 +8,7 @@ export const useFabricTools = (fabricCanvas: fabric.Canvas | null) => {
   const [color, setColor] = useState('#000000');
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [drawingName, setDrawingName] = useState('Untitled Drawing');
   
   // Update canvas when tools change
   useEffect(() => {
@@ -286,15 +286,167 @@ export const useFabricTools = (fabricCanvas: fabric.Canvas | null) => {
     toast.success("Drawing downloaded successfully");
   };
 
+  // Save drawing to localStorage
+  const saveToLocalStorage = () => {
+    if (!fabricCanvas) return;
+    
+    try {
+      // Get the canvas as JSON
+      const canvasJSON = JSON.stringify(fabricCanvas.toJSON());
+      
+      // Generate a unique key based on timestamp if none exists
+      const key = `manga-drawing-${Date.now()}`;
+      
+      // Save the canvas data and metadata
+      const drawingData = {
+        id: key,
+        name: drawingName,
+        preview: fabricCanvas.toDataURL({ format: 'png', quality: 0.5 }),
+        data: canvasJSON,
+        lastModified: new Date().toISOString()
+      };
+      
+      // Save to localStorage
+      localStorage.setItem(key, JSON.stringify(drawingData));
+      
+      // Update the saved drawings list
+      const savedDrawings = JSON.parse(localStorage.getItem('manga-drawings') || '[]');
+      savedDrawings.push({
+        id: key,
+        name: drawingName,
+        preview: drawingData.preview,
+        lastModified: drawingData.lastModified
+      });
+      localStorage.setItem('manga-drawings', JSON.stringify(savedDrawings));
+      
+      toast.success(`Drawing saved as "${drawingName}"`);
+      return key;
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+      toast.error('Failed to save drawing to browser storage');
+      return null;
+    }
+  };
+  
+  // Load a drawing from localStorage
+  const loadFromLocalStorage = (key: string) => {
+    if (!fabricCanvas) return false;
+    
+    try {
+      const savedDrawing = localStorage.getItem(key);
+      
+      if (!savedDrawing) {
+        toast.error('Drawing not found');
+        return false;
+      }
+      
+      const { data, name } = JSON.parse(savedDrawing);
+      fabricCanvas.loadFromJSON(JSON.parse(data), () => {
+        fabricCanvas.renderAll();
+        setDrawingName(name);
+        toast.success(`Drawing "${name}" loaded`);
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+      toast.error('Failed to load drawing');
+      return false;
+    }
+  };
+  
+  // Get saved drawings from localStorage
+  const getSavedDrawings = () => {
+    try {
+      const savedDrawings = localStorage.getItem('manga-drawings');
+      return savedDrawings ? JSON.parse(savedDrawings) : [];
+    } catch (error) {
+      console.error('Error getting saved drawings:', error);
+      return [];
+    }
+  };
+  
+  // Export drawing as a file
+  const exportToFile = () => {
+    if (!fabricCanvas) return;
+    
+    try {
+      // Get the canvas as JSON
+      const canvasJSON = JSON.stringify(fabricCanvas.toJSON());
+      
+      // Create a Blob with the JSON data
+      const blob = new Blob([canvasJSON], { type: 'application/json' });
+      
+      // Create a download link
+      const link = document.createElement('a');
+      link.download = `${drawingName.replace(/\s+/g, '-').toLowerCase()}.json`;
+      link.href = URL.createObjectURL(blob);
+      
+      // Trigger the download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success(`Drawing exported as ${link.download}`);
+    } catch (error) {
+      console.error('Error exporting to file:', error);
+      toast.error('Failed to export drawing');
+    }
+  };
+  
+  // Import drawing from a file
+  const importFromFile = (file: File) => {
+    if (!fabricCanvas) return;
+    
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      try {
+        if (event.target?.result) {
+          const jsonData = JSON.parse(event.target.result as string);
+          
+          fabricCanvas.loadFromJSON(jsonData, () => {
+            fabricCanvas.renderAll();
+            // Extract filename without extension
+            const fileName = file.name.replace(/\.[^/.]+$/, "");
+            setDrawingName(fileName);
+            toast.success(`Drawing "${fileName}" imported`);
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing JSON file:', error);
+        toast.error('Failed to import drawing: Invalid file format');
+      }
+    };
+    
+    reader.onerror = () => {
+      toast.error('Failed to read file');
+    };
+    
+    reader.readAsText(file);
+  };
+  
+  // Handle drawing name change
+  const handleDrawingNameChange = (name: string) => {
+    setDrawingName(name);
+  };
+
   return {
     currentTool,
     strokeWidth,
     color,
+    drawingName,
     handleToolChange,
     setStrokeWidth,
     setColor,
+    handleDrawingNameChange,
     handleUndo,
     clearCanvas,
-    downloadCanvas
+    downloadCanvas,
+    saveToLocalStorage,
+    loadFromLocalStorage,
+    getSavedDrawings,
+    exportToFile,
+    importFromFile
   };
 };
