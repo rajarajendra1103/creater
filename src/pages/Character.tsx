@@ -2,7 +2,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import CharacterEditor from '@/components/CharacterEditor';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { InfoIcon } from 'lucide-react';
 
 const Character = () => {
   return (
@@ -16,7 +16,7 @@ const Character = () => {
         </div>
 
         <Alert variant="default" className="mb-6">
-          <InfoCircledIcon className="h-4 w-4" />
+          <InfoIcon className="h-4 w-4" />
           <AlertTitle>Image Processing Available</AlertTitle>
           <AlertDescription>
             This application uses external APIs for image processing. For better results, 
