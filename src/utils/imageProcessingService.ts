@@ -1,27 +1,25 @@
 
 import { toast } from 'sonner';
-
-// Note: In a production app, you would not store API keys directly in the code
-// Instead, you would use a backend service or environment variables
-// These are included here for demonstration purposes only
-const API_KEYS = {
-  replicate: "r8_QrqqAVtchqQw7fsVISUNUF5Sj4AjoKU38F8z0",
-  deepAI: "2ac63084-bc2b-4954-86ce-b7f93db66524",
-  removeBg: "XS75Qy3m6PG9B4YeLnnnwNon"
-};
+import { getStoredApiKeys } from './apiKeyStorage';
 
 /**
  * Converts an image to a manga-style sketch using DeepAI
  */
 export const convertImageToSketch = async (imageFile: File): Promise<string> => {
   try {
+    const apiKeys = getStoredApiKeys();
+    
+    if (!apiKeys.deepAI) {
+      throw new Error('DeepAI API key not found');
+    }
+    
     const formData = new FormData();
     formData.append('image', imageFile);
     
     const response = await fetch('https://api.deepai.org/api/toonify', {
       method: 'POST',
       headers: {
-        'api-key': API_KEYS.deepAI
+        'api-key': apiKeys.deepAI
       },
       body: formData
     });
@@ -44,13 +42,19 @@ export const convertImageToSketch = async (imageFile: File): Promise<string> => 
  */
 export const removeImageBackground = async (imageFile: File): Promise<Blob> => {
   try {
+    const apiKeys = getStoredApiKeys();
+    
+    if (!apiKeys.removeBg) {
+      throw new Error('Remove.bg API key not found');
+    }
+    
     const formData = new FormData();
     formData.append('image_file', imageFile);
     
     const response = await fetch('https://api.remove.bg/v1.0/removebg', {
       method: 'POST',
       headers: {
-        'X-Api-Key': API_KEYS.removeBg
+        'X-Api-Key': apiKeys.removeBg
       },
       body: formData
     });
@@ -72,11 +76,17 @@ export const removeImageBackground = async (imageFile: File): Promise<Blob> => {
  */
 export const generateImageFromPrompt = async (prompt: string): Promise<string> => {
   try {
+    const apiKeys = getStoredApiKeys();
+    
+    if (!apiKeys.replicate) {
+      throw new Error('Replicate API key not found');
+    }
+    
     // First, start the prediction
     const response = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${API_KEYS.replicate}`,
+        'Authorization': `Token ${apiKeys.replicate}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -95,7 +105,7 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
     const getPredictionResult = async (id: string): Promise<string> => {
       const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${id}`, {
         headers: {
-          'Authorization': `Token ${API_KEYS.replicate}`,
+          'Authorization': `Token ${apiKeys.replicate}`,
           'Content-Type': 'application/json'
         }
       });

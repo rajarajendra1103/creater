@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +10,8 @@ import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import Loading from '@/components/ui/Loading';
+import { generateImageFromPrompt } from '@/utils/imageProcessingService';
+import { hasApiKey } from '@/utils/apiKeyStorage';
 
 const formSchema = z.object({
   prompt: z.string().min(3, {
@@ -30,6 +31,12 @@ interface TextPromptFormProps {
 
 const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [hasReplicate, setHasReplicate] = useState(false);
+
+  useEffect(() => {
+    // Check if API key is available
+    setHasReplicate(hasApiKey('replicate'));
+  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -46,22 +53,40 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
     setIsGenerating(true);
     
     try {
-      // In a real implementation, this would call an API
-      // For now, we'll simulate an API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Mock response - in production this would be a real API call
-      const mockImageUrl = 'https://images.unsplash.com/photo-1548391350-968f58dedaed?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1050&q=80';
+      if (!hasReplicate) {
+        toast.error("No Replicate API key found. Please add your API key in the settings.");
+        throw new Error("Missing API key");
+      }
+
+      // Enhance the prompt based on the style
+      let enhancedPrompt = values.prompt;
+      switch (values.style) {
+        case 'manga':
+          enhancedPrompt = `Manga style: ${values.prompt}, black and white, line art, detailed, ${values.detailLevel}/10 detail level`;
+          break;
+        case 'anime':
+          enhancedPrompt = `Anime style: ${values.prompt}, colorful, clean lines, ${values.detailLevel}/10 detail level`;
+          break;
+        case 'sketch':
+          enhancedPrompt = `Rough sketch: ${values.prompt}, pencil drawing, ${values.detailLevel}/10 detail level`;
+          break;
+        case 'line-art':
+          enhancedPrompt = `Clean line art: ${values.prompt}, black and white, no shading, ${values.detailLevel}/10 detail level`;
+          break;
+      }
+
+      // Call the actual API
+      const imageUrl = await generateImageFromPrompt(enhancedPrompt);
       
       onGenerate({
-        imageUrl: mockImageUrl,
+        imageUrl,
         prompt: values.prompt
       });
       
       toast.success("Image generated successfully!");
     } catch (error) {
       console.error("Generation error:", error);
-      toast.error("Failed to generate image. Please try again.");
+      toast.error("Failed to generate image. Please check your API key and try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -70,6 +95,12 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {!hasReplicate && (
+          <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-3 rounded-md mb-4 text-sm">
+            No Replicate API key found. Your generation request will fail. Please add your API key in the settings.
+          </div>
+        )}
+
         <FormField
           control={form.control}
           name="prompt"
