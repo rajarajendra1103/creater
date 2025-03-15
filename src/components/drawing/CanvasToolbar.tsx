@@ -4,7 +4,6 @@ import { Slider } from '@/components/ui/slider';
 import { 
   Trash2, 
   Undo2, 
-  Redo2, 
   Download,
   Minus,
   Plus,
@@ -13,7 +12,10 @@ import {
   Square,
   Circle,
   MousePointer,
-  Type
+  Type,
+  Minimize2,
+  Hexagon,
+  Pencil
 } from 'lucide-react';
 
 interface Tool {
@@ -25,6 +27,9 @@ interface Tool {
 const tools: Tool[] = [
   { id: 'select', name: 'Select', icon: <MousePointer size={20} /> },
   { id: 'pen', name: 'Pen', icon: <Pen size={20} /> },
+  { id: 'freeform', name: 'Freeform', icon: <Pencil size={20} /> },
+  { id: 'line', name: 'Line', icon: <Minimize2 size={20} /> },
+  { id: 'polygon', name: 'Polygon', icon: <Hexagon size={20} /> },
   { id: 'eraser', name: 'Eraser', icon: <Eraser size={20} /> },
   { id: 'rectangle', name: 'Rectangle', icon: <Square size={20} /> },
   { id: 'circle', name: 'Circle', icon: <Circle size={20} /> },
@@ -56,7 +61,7 @@ const CanvasToolbar = ({
 }: CanvasToolbarProps) => {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 bg-secondary/30 p-3 rounded-lg">
-      <div className="flex space-x-1">
+      <div className="flex flex-wrap gap-1">
         {tools.map((tool) => (
           <Button
             key={tool.id}

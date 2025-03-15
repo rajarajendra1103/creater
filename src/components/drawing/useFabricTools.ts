@@ -7,16 +7,18 @@ export const useFabricTools = (fabricCanvas: fabric.Canvas | null) => {
   const [currentTool, setCurrentTool] = useState('pen');
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [color, setColor] = useState('#000000');
+  const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
+  const [isDrawing, setIsDrawing] = useState(false);
   
   // Update canvas when tools change
   useEffect(() => {
     if (!fabricCanvas) return;
     
     // Set drawing mode based on current tool
-    fabricCanvas.isDrawingMode = currentTool === 'pen' || currentTool === 'eraser';
+    fabricCanvas.isDrawingMode = currentTool === 'pen' || currentTool === 'eraser' || currentTool === 'freeform';
     
     // Configure the brush based on the current tool
-    if (currentTool === 'pen') {
+    if (currentTool === 'pen' || currentTool === 'freeform') {
       fabricCanvas.freeDrawingBrush.color = color;
       fabricCanvas.freeDrawingBrush.width = strokeWidth;
     } else if (currentTool === 'eraser') {
@@ -26,6 +28,164 @@ export const useFabricTools = (fabricCanvas: fabric.Canvas | null) => {
     }
     
   }, [currentTool, color, strokeWidth, fabricCanvas]);
+  
+  // Set up event listeners
+  useEffect(() => {
+    if (!fabricCanvas) return;
+    
+    const handleMouseDown = (options: fabric.IEvent<MouseEvent>) => {
+      if (currentTool === 'line' || currentTool === 'polygon') {
+        setIsDrawing(true);
+        const pointer = fabricCanvas.getPointer(options.e);
+        setPoints([{ x: pointer.x, y: pointer.y }]);
+      }
+    };
+    
+    const handleMouseMove = (options: fabric.IEvent<MouseEvent>) => {
+      if (!isDrawing) return;
+      
+      const pointer = fabricCanvas.getPointer(options.e);
+      
+      if (currentTool === 'line') {
+        // For line tool, update the line in real-time as user moves mouse
+        if (points.length === 1) {
+          // Find existing temp line and remove it
+          const objects = fabricCanvas.getObjects();
+          const tempLine = objects.find(obj => obj.data?.temp === true);
+          if (tempLine) fabricCanvas.remove(tempLine);
+          
+          // Create new temp line
+          const line = new fabric.Line(
+            [points[0].x, points[0].y, pointer.x, pointer.y],
+            {
+              stroke: color,
+              strokeWidth: strokeWidth,
+              data: { temp: true }
+            }
+          );
+          fabricCanvas.add(line);
+          fabricCanvas.renderAll();
+        }
+      } else if (currentTool === 'polygon') {
+        // For polygon tool, update the line to current mouse position
+        if (points.length > 0) {
+          // Find existing temp line and remove it
+          const objects = fabricCanvas.getObjects();
+          const tempLine = objects.find(obj => obj.data?.temp === true);
+          if (tempLine) fabricCanvas.remove(tempLine);
+          
+          const lastPoint = points[points.length - 1];
+          // Create new temp line
+          const line = new fabric.Line(
+            [lastPoint.x, lastPoint.y, pointer.x, pointer.y],
+            {
+              stroke: color,
+              strokeWidth: strokeWidth,
+              data: { temp: true }
+            }
+          );
+          fabricCanvas.add(line);
+          fabricCanvas.renderAll();
+        }
+      }
+    };
+    
+    const handleMouseUp = (options: fabric.IEvent<MouseEvent>) => {
+      if (!isDrawing) return;
+      
+      const pointer = fabricCanvas.getPointer(options.e);
+      
+      if (currentTool === 'line') {
+        // Remove the temporary line
+        const objects = fabricCanvas.getObjects();
+        const tempLine = objects.find(obj => obj.data?.temp === true);
+        if (tempLine) fabricCanvas.remove(tempLine);
+        
+        // Create permanent line
+        const line = new fabric.Line(
+          [points[0].x, points[0].y, pointer.x, pointer.y],
+          {
+            stroke: color,
+            strokeWidth: strokeWidth
+          }
+        );
+        fabricCanvas.add(line);
+        setIsDrawing(false);
+        setPoints([]);
+      } else if (currentTool === 'polygon') {
+        // For polygon, add point but don't finish unless double-clicked
+        setPoints(prev => [...prev, { x: pointer.x, y: pointer.y }]);
+        
+        // If more than one point, draw line between last two points
+        if (points.length > 0) {
+          // Remove temporary line
+          const objects = fabricCanvas.getObjects();
+          const tempLine = objects.find(obj => obj.data?.temp === true);
+          if (tempLine) fabricCanvas.remove(tempLine);
+          
+          const lastPoint = points[points.length - 1];
+          const line = new fabric.Line(
+            [lastPoint.x, lastPoint.y, pointer.x, pointer.y],
+            {
+              stroke: color,
+              strokeWidth: strokeWidth
+            }
+          );
+          fabricCanvas.add(line);
+        }
+      }
+      
+      fabricCanvas.renderAll();
+    };
+    
+    const handleDblClick = () => {
+      if (currentTool === 'polygon' && points.length > 2) {
+        // Complete the polygon on double-click
+        // Remove the temporary line
+        const objects = fabricCanvas.getObjects();
+        const tempLine = objects.find(obj => obj.data?.temp === true);
+        if (tempLine) fabricCanvas.remove(tempLine);
+        
+        // Create the polygon using the collected points
+        const polygonPoints = points.flatMap(p => [p.x, p.y]);
+        // Add first point to close the polygon
+        polygonPoints.push(points[0].x, points[0].y);
+        
+        const polygon = new fabric.Polygon(
+          points.map(p => new fabric.Point(p.x, p.y)),
+          {
+            stroke: color,
+            strokeWidth: strokeWidth,
+            fill: 'transparent'
+          }
+        );
+        
+        fabricCanvas.add(polygon);
+        setIsDrawing(false);
+        setPoints([]);
+        
+        // Remove all the lines we used to preview the polygon
+        const linesToRemove = fabricCanvas.getObjects('line');
+        linesToRemove.forEach(line => fabricCanvas.remove(line));
+        
+        fabricCanvas.renderAll();
+      }
+    };
+
+    // Add event listeners
+    fabricCanvas.on('mouse:down', handleMouseDown);
+    fabricCanvas.on('mouse:move', handleMouseMove);
+    fabricCanvas.on('mouse:up', handleMouseUp);
+    fabricCanvas.on('mouse:dblclick', handleDblClick);
+    
+    // Cleanup function
+    return () => {
+      fabricCanvas.off('mouse:down', handleMouseDown);
+      fabricCanvas.off('mouse:move', handleMouseMove);
+      fabricCanvas.off('mouse:up', handleMouseUp);
+      fabricCanvas.off('mouse:dblclick', handleDblClick);
+    };
+  }, [fabricCanvas, currentTool, color, strokeWidth, isDrawing, points]);
   
   // Handle tool selection
   const handleToolChange = (toolId: string) => {
