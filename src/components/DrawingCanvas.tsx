@@ -14,9 +14,11 @@ import {
   Pen,
   Square,
   Circle,
-  MousePointer
+  MousePointer,
+  Type
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { fabric } from 'fabric';
 
 interface Tool {
   id: string;
@@ -30,6 +32,7 @@ const tools: Tool[] = [
   { id: 'eraser', name: 'Eraser', icon: <Eraser size={20} /> },
   { id: 'rectangle', name: 'Rectangle', icon: <Square size={20} /> },
   { id: 'circle', name: 'Circle', icon: <Circle size={20} /> },
+  { id: 'text', name: 'Text', icon: <Type size={20} /> },
 ];
 
 interface DrawingCanvasProps {
@@ -39,195 +42,156 @@ interface DrawingCanvasProps {
 
 const DrawingCanvas = ({ width = 800, height = 600 }: DrawingCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null);
   const [currentTool, setCurrentTool] = useState('pen');
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [color, setColor] = useState('#000000');
-  const [history, setHistory] = useState<ImageData[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-
-  // Initialize canvas
+  const [isDrawing, setIsDrawing] = useState(false);
+  
+  // Initialize Fabric.js canvas
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const context = canvas.getContext('2d');
-    if (!context) return;
-
-    // Set canvas size
-    canvas.width = width;
-    canvas.height = height;
-
-    // Initialize with white background
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    setCtx(context);
-
-    // Save initial state
-    const initialState = context.getImageData(0, 0, canvas.width, canvas.height);
-    setHistory([initialState]);
-    setHistoryIndex(0);
+    if (!canvasRef.current) return;
+    
+    // Get the canvas element's ID
+    const canvasId = canvasRef.current.id;
+    
+    // Create a new Fabric.js canvas
+    const canvas = new fabric.Canvas(canvasId, {
+      width,
+      height,
+      backgroundColor: '#ffffff',
+      isDrawingMode: currentTool === 'pen',
+    });
+    
+    // Initialize the brush
+    canvas.freeDrawingBrush.color = color;
+    canvas.freeDrawingBrush.width = strokeWidth;
+    
+    setFabricCanvas(canvas);
+    
+    // Clean up function
+    return () => {
+      canvas.dispose();
+    };
   }, [width, height]);
-
-  // Save current state to history
-  const saveState = () => {
-    if (!ctx || !canvasRef.current) return;
+  
+  // Update canvas when tools change
+  useEffect(() => {
+    if (!fabricCanvas) return;
     
-    const currentState = ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
+    // Set drawing mode based on current tool
+    fabricCanvas.isDrawingMode = currentTool === 'pen' || currentTool === 'eraser';
     
-    // If we've gone back in history and then drawn something new,
-    // we need to remove all the states after the current one
-    const newHistory = history.slice(0, historyIndex + 1);
+    // Configure the brush based on the current tool
+    if (currentTool === 'pen') {
+      fabricCanvas.freeDrawingBrush.color = color;
+      fabricCanvas.freeDrawingBrush.width = strokeWidth;
+    } else if (currentTool === 'eraser') {
+      // Simulate eraser with white color
+      fabricCanvas.freeDrawingBrush.color = '#ffffff';
+      fabricCanvas.freeDrawingBrush.width = strokeWidth * 2;
+    }
     
-    setHistory([...newHistory, currentState]);
-    setHistoryIndex(newHistory.length);
-  };
-
-  // Undo and redo functions
-  const undo = () => {
-    if (historyIndex <= 0) return;
+  }, [currentTool, color, strokeWidth, fabricCanvas]);
+  
+  // Handle tool selection
+  const handleToolChange = (toolId: string) => {
+    setCurrentTool(toolId);
     
-    const newIndex = historyIndex - 1;
-    setHistoryIndex(newIndex);
+    if (!fabricCanvas) return;
     
-    if (!ctx || !canvasRef.current) return;
-    ctx.putImageData(history[newIndex], 0, 0);
-  };
-
-  const redo = () => {
-    if (historyIndex >= history.length - 1) return;
+    // Deselect all objects when changing tools
+    fabricCanvas.discardActiveObject().renderAll();
     
-    const newIndex = historyIndex + 1;
-    setHistoryIndex(newIndex);
-    
-    if (!ctx || !canvasRef.current) return;
-    ctx.putImageData(history[newIndex], 0, 0);
+    if (toolId === 'rectangle') {
+      // Create rectangle on next click
+      fabricCanvas.once('mouse:down', (options) => {
+        const pointer = fabricCanvas.getPointer(options.e);
+        const rect = new fabric.Rect({
+          left: pointer.x,
+          top: pointer.y,
+          width: 100,
+          height: 80,
+          fill: 'transparent',
+          stroke: color,
+          strokeWidth: strokeWidth,
+        });
+        fabricCanvas.add(rect);
+        fabricCanvas.setActiveObject(rect);
+      });
+    } else if (toolId === 'circle') {
+      // Create circle on next click
+      fabricCanvas.once('mouse:down', (options) => {
+        const pointer = fabricCanvas.getPointer(options.e);
+        const circle = new fabric.Circle({
+          left: pointer.x,
+          top: pointer.y,
+          radius: 50,
+          fill: 'transparent',
+          stroke: color,
+          strokeWidth: strokeWidth,
+        });
+        fabricCanvas.add(circle);
+        fabricCanvas.setActiveObject(circle);
+      });
+    } else if (toolId === 'text') {
+      // Add text on next click
+      fabricCanvas.once('mouse:down', (options) => {
+        const pointer = fabricCanvas.getPointer(options.e);
+        const text = new fabric.Textbox('Type here', {
+          left: pointer.x,
+          top: pointer.y,
+          fontSize: 20,
+          fill: color,
+          width: 200,
+          editable: true,
+        });
+        fabricCanvas.add(text);
+        fabricCanvas.setActiveObject(text);
+      });
+    }
   };
 
   // Clear canvas
   const clearCanvas = () => {
-    if (!ctx || !canvasRef.current) return;
+    if (!fabricCanvas) return;
     
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    fabricCanvas.clear();
+    fabricCanvas.setBackgroundColor('#ffffff', () => {});
+    fabricCanvas.renderAll();
     
-    saveState();
     toast.success("Canvas cleared");
   };
 
+  // Undo / Redo functionality would require maintaining a history stack
+  // This is a simplified version without history
+  const handleUndo = () => {
+    if (!fabricCanvas) return;
+    
+    const objects = fabricCanvas.getObjects();
+    if (objects.length > 0) {
+      fabricCanvas.remove(objects[objects.length - 1]);
+      toast.info("Last action undone");
+    }
+  };
+  
   // Download canvas
   const downloadCanvas = () => {
-    if (!canvasRef.current) return;
+    if (!fabricCanvas) return;
+    
+    const dataURL = fabricCanvas.toDataURL({
+      format: 'png',
+      quality: 1
+    });
     
     const link = document.createElement('a');
     link.download = `manga-drawing-${Date.now()}.png`;
-    link.href = canvasRef.current.toDataURL('image/png');
+    link.href = dataURL;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
     toast.success("Drawing downloaded successfully");
-  };
-
-  // Drawing functions
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!ctx || !canvasRef.current) return;
-    
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    
-    if (currentTool === 'pen') {
-      ctx.strokeStyle = color;
-      ctx.lineWidth = strokeWidth;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-    } else if (currentTool === 'eraser') {
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = strokeWidth * 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-    }
-    
-    setIsDrawing(true);
-  };
-
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !ctx || !canvasRef.current) return;
-    
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    if (currentTool === 'pen' || currentTool === 'eraser') {
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    } else if (currentTool === 'rectangle') {
-      // Not implemented in this simplified version
-    } else if (currentTool === 'circle') {
-      // Not implemented in this simplified version
-    }
-  };
-
-  const endDrawing = () => {
-    if (!isDrawing) return;
-    setIsDrawing(false);
-    saveState();
-  };
-
-  // Handle touch events
-  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!ctx || !canvasRef.current) return;
-    e.preventDefault();
-    
-    const rect = canvasRef.current.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-    
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    
-    if (currentTool === 'pen') {
-      ctx.strokeStyle = color;
-      ctx.lineWidth = strokeWidth;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-    } else if (currentTool === 'eraser') {
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = strokeWidth * 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-    }
-    
-    setIsDrawing(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !ctx || !canvasRef.current) return;
-    e.preventDefault();
-    
-    const rect = canvasRef.current.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-    
-    if (currentTool === 'pen' || currentTool === 'eraser') {
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    if (!isDrawing) return;
-    setIsDrawing(false);
-    saveState();
   };
 
   return (
@@ -239,7 +203,7 @@ const DrawingCanvas = ({ width = 800, height = 600 }: DrawingCanvasProps) => {
               key={tool.id}
               variant={currentTool === tool.id ? "default" : "outline"}
               size="icon"
-              onClick={() => setCurrentTool(tool.id)}
+              onClick={() => handleToolChange(tool.id)}
               title={tool.name}
               className="rounded-md"
             >
@@ -289,20 +253,10 @@ const DrawingCanvas = ({ width = 800, height = 600 }: DrawingCanvasProps) => {
           <Button 
             variant="outline" 
             size="icon" 
-            onClick={undo}
-            disabled={historyIndex <= 0}
+            onClick={handleUndo}
             className="rounded-md"
           >
             <Undo2 size={18} />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={redo}
-            disabled={historyIndex >= history.length - 1}
-            className="rounded-md"
-          >
-            <Redo2 size={18} />
           </Button>
           <Button 
             variant="outline" 
@@ -325,15 +279,9 @@ const DrawingCanvas = ({ width = 800, height = 600 }: DrawingCanvasProps) => {
       
       <div className="relative border border-gray-200 rounded-lg shadow-lg overflow-hidden">
         <canvas
+          id="manga-fabric-canvas"
           ref={canvasRef}
           className="drawing-canvas bg-white w-full h-full"
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={endDrawing}
-          onMouseLeave={endDrawing}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
         />
       </div>
     </div>

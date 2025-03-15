@@ -4,6 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { InfoIcon } from 'lucide-react';
 
 const Canvas = () => {
   const [canvasSize, setCanvasSize] = useState('medium');
@@ -30,6 +32,14 @@ const Canvas = () => {
             Sketch and refine your manga artwork with professional drawing tools
           </p>
         </div>
+
+        <Alert variant="default" className="mb-6">
+          <InfoIcon className="h-4 w-4" />
+          <AlertTitle>Enhanced Drawing Tools</AlertTitle>
+          <AlertDescription>
+            This canvas now uses Fabric.js for better drawing capabilities. Try the rectangle, circle, and text tools!
+          </AlertDescription>
+        </Alert>
 
         <Card className="glass-panel overflow-hidden border-0">
           <CardContent className="p-6 lg:p-8">
