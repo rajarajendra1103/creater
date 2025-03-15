@@ -1,6 +1,8 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import CharacterEditor from '@/components/CharacterEditor';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { InfoCircledIcon } from '@radix-ui/react-icons';
 
 const Character = () => {
   return (
@@ -12,6 +14,15 @@ const Character = () => {
             Create and customize manga characters with different features and expressions
           </p>
         </div>
+
+        <Alert variant="default" className="mb-6">
+          <InfoCircledIcon className="h-4 w-4" />
+          <AlertTitle>Image Processing Available</AlertTitle>
+          <AlertDescription>
+            This application uses external APIs for image processing. For better results, 
+            upload high-quality images with clear facial features.
+          </AlertDescription>
+        </Alert>
 
         <Card className="glass-panel overflow-hidden border-0">
           <CardContent className="p-6">

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -6,10 +5,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Undo2, Redo2, RefreshCw, ChevronDown, User, Shirt, Palette, Upload, Image, Footprints, Pointer } from 'lucide-react';
+import { Download, RefreshCw, ChevronDown, User, Shirt, Palette, Image, Footprints, Pointer } from 'lucide-react';
 import { toast } from 'sonner';
 import Loading from '@/components/ui/Loading';
 import ImageUploader from '@/components/ImageUploader';
@@ -912,22 +910,22 @@ const CharacterEditor = () => {
             <div className="space-y-4">
               <div>
                 <Label className="mb-2 block">Face</Label>
-                <ImageUploader onUploadComplete={(result) => handleFeatureUpload('face', result)} />
+                <ImageUploader onImageProcess={(result) => handleFeatureUpload('face', result)} />
               </div>
               
               <div>
                 <Label className="mb-2 block">Hairstyle</Label>
-                <ImageUploader onUploadComplete={(result) => handleFeatureUpload('hairstyle', result)} />
+                <ImageUploader onImageProcess={(result) => handleFeatureUpload('hairstyle', result)} />
               </div>
               
               <div>
                 <Label className="mb-2 block">Body</Label>
-                <ImageUploader onUploadComplete={(result) => handleFeatureUpload('body', result)} />
+                <ImageUploader onImageProcess={(result) => handleFeatureUpload('body', result)} />
               </div>
               
               <div>
                 <Label className="mb-2 block">Outfit</Label>
-                <ImageUploader onUploadComplete={(result) => handleFeatureUpload('outfit', result)} />
+                <ImageUploader onImageProcess={(result) => handleFeatureUpload('outfit', result)} />
               </div>
               
               <Button 

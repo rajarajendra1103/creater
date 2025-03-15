@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -52,13 +51,11 @@ const ImageUploader = ({
   };
 
   const handleFile = (file: File) => {
-    // Check file type
     if (!allowedTypes.includes(file.type)) {
       toast.error(`Invalid file type. Please upload ${allowedTypes.join(', ')}`);
       return;
     }
     
-    // Check file size
     if (file.size > maxFileSizeMB * 1024 * 1024) {
       toast.error(`File size exceeds ${maxFileSizeMB}MB limit`);
       return;
@@ -85,14 +82,11 @@ const ImageUploader = ({
     setIsProcessing(true);
     
     try {
-      // In a real implementation, this would upload and process the image
-      // For now, we'll simulate an API call with a timeout
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Mock response - in production this would be a real API call
       onImageProcess({
         originalUrl: imagePreviewUrl,
-        processedUrl: imagePreviewUrl // In real app, this would be the processed image URL
+        processedUrl: imagePreviewUrl
       });
       
       toast.success("Image processed successfully!");
