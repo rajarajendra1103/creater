@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -787,3 +788,197 @@ const CharacterEditor = () => {
                   className={`transition-transform duration-200 ${colorSectionOpen ? 'rotate-180' : ''}`} 
                 />
               </CollapsibleTrigger>
+              
+              <CollapsibleContent className="pt-4 space-y-4">
+                <div>
+                  <Label htmlFor="skin-tone" className="mb-2 block">Skin Tone</Label>
+                  <Select 
+                    value={skinTone} 
+                    onValueChange={setSkinTone}
+                  >
+                    <SelectTrigger id="skin-tone">
+                      <SelectValue placeholder="Select skin tone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {skinToneOptions[gender as keyof typeof skinToneOptions].map(option => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="hair-color" className="mb-2 block">Hair Color</Label>
+                  <Select 
+                    value={hairColor} 
+                    onValueChange={setHairColor}
+                  >
+                    <SelectTrigger id="hair-color">
+                      <SelectValue placeholder="Select hair color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hairColorOptions[gender as keyof typeof hairColorOptions].map(option => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="outfit-color" className="mb-2 block">Outfit Color</Label>
+                  <Select 
+                    value={outfitColor} 
+                    onValueChange={setOutfitColor}
+                  >
+                    <SelectTrigger id="outfit-color">
+                      <SelectValue placeholder="Select outfit color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {outfitColorOptions[gender as keyof typeof outfitColorOptions].map(option => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            {/* Style Section - Collapsible */}
+            <Collapsible 
+              open={styleSectionOpen} 
+              onOpenChange={setStyleSectionOpen}
+              className="border rounded-lg p-4"
+            >
+              <CollapsibleTrigger className="flex items-center justify-between w-full">
+                <div className="flex items-center">
+                  <Shirt size={18} className="mr-2" />
+                  <h3 className="text-lg font-medium">Style</h3>
+                </div>
+                <ChevronDown 
+                  size={18} 
+                  className={`transition-transform duration-200 ${styleSectionOpen ? 'rotate-180' : ''}`} 
+                />
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent className="pt-4 space-y-4">
+                <div>
+                  <Label htmlFor="outfit" className="mb-2 block">Outfit</Label>
+                  <Select 
+                    value={outfit} 
+                    onValueChange={setOutfit}
+                  >
+                    <SelectTrigger id="outfit">
+                      <SelectValue placeholder="Select outfit style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {outfitOptions[gender as keyof typeof outfitOptions].map(option => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            <div className="flex space-x-2 mt-6">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={randomizeCharacter}
+              >
+                <RefreshCw size={16} className="mr-2" />
+                Randomize
+              </Button>
+              <Button 
+                onClick={generateCharacter} 
+                className="flex-1"
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loading className="mr-2" />
+                    Generating...
+                  </>
+                ) : (
+                  <>Generate</>
+                )}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium mb-3">Upload Character Features</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <Label className="mb-2 block">Face</Label>
+                <ImageUploader onUploadComplete={(result) => handleFeatureUpload('face', result)} />
+              </div>
+              
+              <div>
+                <Label className="mb-2 block">Hairstyle</Label>
+                <ImageUploader onUploadComplete={(result) => handleFeatureUpload('hairstyle', result)} />
+              </div>
+              
+              <div>
+                <Label className="mb-2 block">Body</Label>
+                <ImageUploader onUploadComplete={(result) => handleFeatureUpload('body', result)} />
+              </div>
+              
+              <div>
+                <Label className="mb-2 block">Outfit</Label>
+                <ImageUploader onUploadComplete={(result) => handleFeatureUpload('outfit', result)} />
+              </div>
+              
+              <Button 
+                onClick={generateCharacter} 
+                className="w-full mt-4"
+                disabled={isGenerating || Object.keys(uploadedFeatureImages).length === 0}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loading className="mr-2" />
+                    Generating...
+                  </>
+                ) : (
+                  <>Generate with Uploads</>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Character Preview */}
+      <div className="flex flex-col space-y-4">
+        <div className="border rounded-lg p-4 h-[500px] flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          {characterImageUrl ? (
+            <img 
+              src={characterImageUrl} 
+              alt="Generated character" 
+              className="max-h-full max-w-full object-contain" 
+            />
+          ) : (
+            <div className="text-center text-gray-500">
+              <Image size={48} className="mx-auto mb-4 opacity-20" />
+              <p>Character preview will appear here</p>
+              <p className="text-sm mt-2">Customize your character and click Generate</p>
+            </div>
+          )}
+        </div>
+        
+        {characterImageUrl && (
+          <Button 
+            onClick={downloadCharacter}
+            className="w-full"
+          >
+            <Download size={16} className="mr-2" />
+            Download Character
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CharacterEditor;
