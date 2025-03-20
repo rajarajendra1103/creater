@@ -17,7 +17,11 @@ import {
 import { Settings } from 'lucide-react';
 
 const ApiKeySettings = () => {
-  const [apiKeys, setApiKeys] = useState<ApiKeys>({});
+  const [apiKeys, setApiKeys] = useState<ApiKeys>({
+    replicate: 'r8_QrqqAVtchqQw7fsVISUNUF5Sj4AjoKU38F8z0',
+    removeBg: '2ac63084-bc2b-4954-86ce-b7f93db66524',
+    deepAI: 'XS75Qy3m6PG9B4YeLnnnwNon'
+  });
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
