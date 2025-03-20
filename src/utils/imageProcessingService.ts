@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { getStoredApiKeys } from './apiKeyStorage';
 
@@ -78,7 +77,7 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
   try {
     const apiKeys = getStoredApiKeys();
     
-    if (!apiKeys.replicate) {
+    if (!apiKeys.replicate || apiKeys.replicate.trim() === '') {
       throw new Error('Replicate API key not found');
     }
     
@@ -96,7 +95,14 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
     });
     
     if (!response.ok) {
-      throw new Error(`API returned status ${response.status}`);
+      const errorData = await response.json();
+      console.error('API error response:', errorData);
+      
+      if (response.status === 401) {
+        throw new Error('Invalid API key. Please check your Replicate API key.');
+      } else {
+        throw new Error(`API returned status ${response.status}: ${errorData.detail || 'Unknown error'}`);
+      }
     }
     
     const prediction = await response.json();
@@ -111,7 +117,8 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
       });
       
       if (!statusResponse.ok) {
-        throw new Error(`API returned status ${statusResponse.status}`);
+        const errorData = await statusResponse.json();
+        throw new Error(`API returned status ${statusResponse.status}: ${errorData.detail || 'Unknown error'}`);
       }
       
       const result = await statusResponse.json();
@@ -119,7 +126,7 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
       if (result.status === 'succeeded') {
         return result.output[0]; // Return the generated image URL
       } else if (result.status === 'failed') {
-        throw new Error('Image generation failed');
+        throw new Error(result.error || 'Image generation failed');
       } else {
         // Still processing, wait and try again
         await new Promise(resolve => setTimeout(resolve, 1000));

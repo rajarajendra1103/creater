@@ -12,6 +12,8 @@ import { toast } from 'sonner';
 import Loading from '@/components/ui/Loading';
 import { generateImageFromPrompt } from '@/utils/imageProcessingService';
 import { hasApiKey } from '@/utils/apiKeyStorage';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const formSchema = z.object({
   prompt: z.string().min(3, {
@@ -38,6 +40,18 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
     setHasReplicate(hasApiKey('replicate'));
   }, []);
 
+  // Re-check API key status when component is focused
+  useEffect(() => {
+    const checkApiKey = () => {
+      setHasReplicate(hasApiKey('replicate'));
+    };
+
+    window.addEventListener('focus', checkApiKey);
+    return () => {
+      window.removeEventListener('focus', checkApiKey);
+    };
+  }, []);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -50,14 +64,16 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
   });
 
   const onSubmit = async (values: FormValues) => {
+    // Double-check API key before submission
+    if (!hasApiKey('replicate')) {
+      toast.error("No Replicate API key found. Please add your API key in the settings.");
+      setHasReplicate(false);
+      return;
+    }
+
     setIsGenerating(true);
     
     try {
-      if (!hasReplicate) {
-        toast.error("No Replicate API key found. Please add your API key in the settings.");
-        throw new Error("Missing API key");
-      }
-
       // Enhance the prompt based on the style
       let enhancedPrompt = values.prompt;
       switch (values.style) {
@@ -86,7 +102,13 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
       toast.success("Image generated successfully!");
     } catch (error) {
       console.error("Generation error:", error);
-      toast.error("Failed to generate image. Please check your API key and try again.");
+      
+      if (error instanceof Error && error.message === "Replicate API key not found") {
+        toast.error("No valid API key found. Please add your Replicate API key in the settings.");
+        setHasReplicate(false);
+      } else {
+        toast.error("Failed to generate image. Please check your API key and try again.");
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -96,9 +118,12 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {!hasReplicate && (
-          <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-3 rounded-md mb-4 text-sm">
-            No Replicate API key found. Your generation request will fail. Please add your API key in the settings.
-          </div>
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              No Replicate API key found. Please add your API key in the settings to generate images.
+            </AlertDescription>
+          </Alert>
         )}
 
         <FormField
@@ -215,7 +240,7 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
         <Button 
           type="submit" 
           className="w-full py-6 rounded-xl btn-hover"
-          disabled={isGenerating}
+          disabled={isGenerating || !hasReplicate}
         >
           {isGenerating ? (
             <Loading size="small" message="" />
