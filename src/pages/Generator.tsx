@@ -1,11 +1,9 @@
-
 import { useState } from 'react';
 import { Download, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TextPromptForm from '@/components/TextPromptForm';
-import ApiKeySettings from '@/components/ApiKeySettings';
 import { toast } from 'sonner';
 
 interface GeneratedImage {
@@ -65,10 +63,7 @@ const Generator = () => {
     <div className="min-h-screen pt-20 pb-10 px-4 page-transition page-enter">
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-10">
-          <div className="flex items-center justify-center">
-            <h1 className="section-heading mb-3">Text to Drawing Generator</h1>
-            <ApiKeySettings />
-          </div>
+          <h1 className="section-heading mb-3">Text to Drawing Generator</h1>
           <p className="section-subheading">
             Describe what you want to create and let AI transform your words into manga art
           </p>
