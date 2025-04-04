@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { getStoredApiKeys } from './apiKeyStorage';
 
@@ -78,40 +77,37 @@ const getDrawingImageForPrompt = (prompt: string): string => {
   // Convert prompt to lowercase for easier matching
   const lowerPrompt = prompt.toLowerCase();
   
-  // Base drawing collection URLs - these are simple line drawings rather than photos
-  const baseDrawingUrl = 'public/lovable-uploads/ba89ad85-8ca4-4e39-b3be-3345faf9252c.png';
-  
-  // Define keywords and corresponding drawing images
+  // Define keywords and corresponding drawing images with more reliable URLs
   if (lowerPrompt.includes('tree') || lowerPrompt.includes('forest') || lowerPrompt.includes('plant')) {
-    return 'https://i.ibb.co/ZKtRLkJ/tree-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2021/01/05/00/25/tree-5889799_1280.png';
   } else if (lowerPrompt.includes('sky') || lowerPrompt.includes('cloud') || lowerPrompt.includes('weather')) {
-    return 'https://i.ibb.co/wL0yrKZ/sky-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2021/09/28/03/01/clouds-6663165_1280.png';
   } else if (lowerPrompt.includes('water') || lowerPrompt.includes('ocean') || lowerPrompt.includes('sea') || lowerPrompt.includes('lake')) {
-    return 'https://i.ibb.co/TwrHMZ7/water-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2022/03/01/02/51/sea-7040341_1280.png';
   } else if (lowerPrompt.includes('mountain') || lowerPrompt.includes('hill')) {
-    return 'https://i.ibb.co/GdPBy3t/mountain-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2022/10/05/20/43/mountains-7501093_1280.png';
   } else if (lowerPrompt.includes('city') || lowerPrompt.includes('building') || lowerPrompt.includes('house') || lowerPrompt.includes('urban')) {
-    return 'https://i.ibb.co/TMJcHLz/house-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2021/10/12/14/59/building-6704111_1280.png';
   } else if (lowerPrompt.includes('character') || lowerPrompt.includes('person') || lowerPrompt.includes('hero') || lowerPrompt.includes('ninja') || lowerPrompt.includes('warrior')) {
-    return 'https://i.ibb.co/f1J3rYL/character-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2019/01/15/15/41/manga-3934818_1280.png';
   } else if (lowerPrompt.includes('animal') || lowerPrompt.includes('cat') || lowerPrompt.includes('dog')) {
-    return 'https://i.ibb.co/hXXq4YM/animal-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2022/12/24/21/14/cat-7676445_1280.png';
   } else if (lowerPrompt.includes('manga') || lowerPrompt.includes('anime') || lowerPrompt.includes('comic')) {
-    return 'https://i.ibb.co/F45KPZq/manga-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2020/03/28/16/03/anime-4977073_1280.png';
   } else if (lowerPrompt.includes('sketch') || lowerPrompt.includes('line art')) {
-    return 'https://i.ibb.co/MkXtGPK/lineart-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2023/01/26/22/15/ai-generated-7747118_1280.png';
   } else if (lowerPrompt.includes('flower') || lowerPrompt.includes('rose') || lowerPrompt.includes('garden')) {
-    return 'https://i.ibb.co/c1FvQTv/flower-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2022/01/18/17/49/flower-6947778_1280.png';
   } else if (lowerPrompt.includes('face') || lowerPrompt.includes('portrait')) {
-    return 'https://i.ibb.co/R75rJ8T/face-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2021/11/11/16/05/woman-6786653_1280.png';
   } else if (lowerPrompt.includes('landscape') || lowerPrompt.includes('scenery')) {
-    return 'https://i.ibb.co/SXz7SSY/landscape-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2022/01/23/19/40/landscape-6961344_1280.png';
   } else if (lowerPrompt.includes('robot') || lowerPrompt.includes('mecha') || lowerPrompt.includes('tech')) {
-    return 'https://i.ibb.co/Km1FLdF/robot-sketch.png';
+    return 'https://cdn.pixabay.com/photo/2021/01/12/06/27/robot-5910623_1280.png';
   }
   
-  // Use the uploaded image as the default fallback
-  return baseDrawingUrl;
+  // Default fallback to a manga drawing
+  return 'https://cdn.pixabay.com/photo/2020/03/28/16/03/anime-4977073_1280.png';
 };
 
 /**
@@ -126,68 +122,12 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
       return getDrawingImageForPrompt(prompt);
     }
     
-    // For now, we'll use our better drawing placeholders until the API integration is fully functional
     console.log('Using drawing style placeholder for prompt:', prompt);
     
     // Return a drawing style image based on the prompt
     return getDrawingImageForPrompt(prompt);
     
-    /* Commented out actual API call for now to prevent errors
-    // First, start the prediction
-    const response = await fetch('https://api.replicate.com/v1/predictions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Token ${apiKeys.replicate}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        version: "8beff3369e81422112d93b89ca01426c731f3cd0f1bde4f07a5628a0ba3220ef",
-        input: { prompt }
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('API error response:', errorData);
-      
-      if (response.status === 401) {
-        throw new Error('Invalid API key. Please check your Replicate API key.');
-      } else {
-        throw new Error(`API returned status ${response.status}: ${errorData.detail || 'Unknown error'}`);
-      }
-    }
-    
-    const prediction = await response.json();
-    
-    // Poll for the result
-    const getPredictionResult = async (id: string): Promise<string> => {
-      const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${id}`, {
-        headers: {
-          'Authorization': `Token ${apiKeys.replicate}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!statusResponse.ok) {
-        const errorData = await statusResponse.json();
-        throw new Error(`API returned status ${statusResponse.status}: ${errorData.detail || 'Unknown error'}`);
-      }
-      
-      const result = await statusResponse.json();
-      
-      if (result.status === 'succeeded') {
-        return result.output[0]; // Return the generated image URL
-      } else if (result.status === 'failed') {
-        throw new Error(result.error || 'Image generation failed');
-      } else {
-        // Still processing, wait and try again
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return getPredictionResult(id);
-      }
-    };
-    
-    return await getPredictionResult(prediction.id);
-    */
+    // Commented out actual API call for now
   } catch (error) {
     console.error('Error generating image:', error);
     toast.error('Failed to generate drawing. Using a placeholder instead.');

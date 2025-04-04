@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -44,6 +43,11 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
   });
 
   const onSubmit = async (values: FormValues) => {
+    if (!values.prompt.trim()) {
+      toast.error("Please enter a drawing prompt");
+      return;
+    }
+    
     setIsGenerating(true);
     
     try {
@@ -64,6 +68,10 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
       }
 
       const imageUrl = await generateImageFromPrompt(enhancedPrompt);
+      
+      if (!imageUrl) {
+        throw new Error("Failed to generate image URL");
+      }
       
       onGenerate({
         imageUrl,
