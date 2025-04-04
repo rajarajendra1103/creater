@@ -72,6 +72,34 @@ export const removeImageBackground = async (imageFile: File): Promise<Blob> => {
 };
 
 /**
+ * Returns a placeholder image URL based on the prompt
+ */
+const getPlaceholderImageForPrompt = (prompt: string): string => {
+  // Convert prompt to lowercase for easier matching
+  const lowerPrompt = prompt.toLowerCase();
+  
+  // Define keywords and corresponding placeholder images
+  if (lowerPrompt.includes('tree') || lowerPrompt.includes('forest') || lowerPrompt.includes('plant')) {
+    return 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+  } else if (lowerPrompt.includes('sky') || lowerPrompt.includes('cloud') || lowerPrompt.includes('weather')) {
+    return 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+  } else if (lowerPrompt.includes('water') || lowerPrompt.includes('ocean') || lowerPrompt.includes('sea') || lowerPrompt.includes('lake')) {
+    return 'https://images.unsplash.com/photo-1520116468816-95b69f847357?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+  } else if (lowerPrompt.includes('mountain') || lowerPrompt.includes('hill')) {
+    return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+  } else if (lowerPrompt.includes('city') || lowerPrompt.includes('building') || lowerPrompt.includes('urban')) {
+    return 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+  } else if (lowerPrompt.includes('character') || lowerPrompt.includes('person') || lowerPrompt.includes('hero') || lowerPrompt.includes('ninja') || lowerPrompt.includes('warrior')) {
+    return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+  } else if (lowerPrompt.includes('animal') || lowerPrompt.includes('cat') || lowerPrompt.includes('dog')) {
+    return 'https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+  }
+  
+  // Default placeholder for other prompts
+  return 'https://images.unsplash.com/photo-1573589896812-d5a54f5e1b0a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+};
+
+/**
  * Generates an image using Replicate AI
  */
 export const generateImageFromPrompt = async (prompt: string): Promise<string> => {
@@ -87,8 +115,8 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
     // This is a temporary solution to fix the failing API calls
     console.log('Using mock image for generation with prompt:', prompt);
     
-    // Return a placeholder manga/anime style image URL
-    return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+    // Return a placeholder image based on the prompt
+    return getPlaceholderImageForPrompt(prompt);
     
     /* Commented out actual API call for now to prevent errors
     // First, start the prediction
@@ -149,8 +177,8 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
   } catch (error) {
     console.error('Error generating image:', error);
     toast.error('Failed to generate image. Using a placeholder instead.');
-    // Return a placeholder image URL as fallback
-    return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+    // Return a placeholder image URL based on the prompt as fallback
+    return getPlaceholderImageForPrompt(prompt);
   }
 };
 
