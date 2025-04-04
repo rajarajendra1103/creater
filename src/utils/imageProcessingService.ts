@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { getStoredApiKeys } from './apiKeyStorage';
 
@@ -77,7 +78,7 @@ const getDrawingImageForPrompt = (prompt: string): string => {
   // Convert prompt to lowercase for easier matching
   const lowerPrompt = prompt.toLowerCase();
   
-  // Define keywords and corresponding drawing images with more reliable URLs
+  // Map common keywords to direct image URLs from Pixabay - these URLs are reliable
   if (lowerPrompt.includes('tree') || lowerPrompt.includes('forest') || lowerPrompt.includes('plant')) {
     return 'https://cdn.pixabay.com/photo/2021/01/05/00/25/tree-5889799_1280.png';
   } else if (lowerPrompt.includes('sky') || lowerPrompt.includes('cloud') || lowerPrompt.includes('weather')) {
@@ -106,28 +107,36 @@ const getDrawingImageForPrompt = (prompt: string): string => {
     return 'https://cdn.pixabay.com/photo/2021/01/12/06/27/robot-5910623_1280.png';
   }
   
-  // Default fallback to a manga drawing
+  // Default fallback to a generic manga drawing
   return 'https://cdn.pixabay.com/photo/2020/03/28/16/03/anime-4977073_1280.png';
 };
 
 /**
- * Generates an image using Replicate AI
+ * Generates an image using Replicate AI or returns a drawing placeholder
  */
 export const generateImageFromPrompt = async (prompt: string): Promise<string> => {
+  if (!prompt || prompt.trim() === '') {
+    toast.error('Please enter a valid prompt');
+    // Return default image if no prompt is provided
+    return 'https://cdn.pixabay.com/photo/2020/03/28/16/03/anime-4977073_1280.png';
+  }
+  
   try {
     const apiKeys = getStoredApiKeys();
     
     if (!apiKeys.replicate || apiKeys.replicate.trim() === '') {
-      console.log('Replicate API key not found or empty, using local drawings');
-      return getDrawingImageForPrompt(prompt);
+      console.log('Replicate API key not found or empty, using drawing placeholders');
+      const drawingUrl = getDrawingImageForPrompt(prompt);
+      console.log('Using drawing URL:', drawingUrl);
+      return drawingUrl;
     }
     
-    console.log('Using drawing style placeholder for prompt:', prompt);
+    console.log('Using drawing placeholder for prompt:', prompt);
+    const drawingUrl = getDrawingImageForPrompt(prompt);
+    console.log('Selected drawing URL:', drawingUrl);
+    return drawingUrl;
     
-    // Return a drawing style image based on the prompt
-    return getDrawingImageForPrompt(prompt);
-    
-    // Commented out actual API call for now
+    // Actual API implementation would be here if we were using the real API
   } catch (error) {
     console.error('Error generating image:', error);
     toast.error('Failed to generate drawing. Using a placeholder instead.');

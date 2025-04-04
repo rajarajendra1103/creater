@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -26,9 +27,10 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface TextPromptFormProps {
   onGenerate: (result: { imageUrl: string, prompt: string }) => void;
+  setIsLoading?: (isLoading: boolean) => void;
 }
 
-const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
+const TextPromptForm = ({ onGenerate, setIsLoading = () => {} }: TextPromptFormProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const form = useForm<FormValues>({
@@ -43,12 +45,13 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
   });
 
   const onSubmit = async (values: FormValues) => {
-    if (!values.prompt.trim()) {
+    if (!values.prompt || !values.prompt.trim()) {
       toast.error("Please enter a drawing prompt");
       return;
     }
     
     setIsGenerating(true);
+    setIsLoading(true);
     
     try {
       let enhancedPrompt = values.prompt;
@@ -67,21 +70,36 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
           break;
       }
 
+      console.log("Generating with prompt:", enhancedPrompt);
       const imageUrl = await generateImageFromPrompt(enhancedPrompt);
       
       if (!imageUrl) {
         throw new Error("Failed to generate image URL");
       }
       
-      onGenerate({
-        imageUrl,
-        prompt: values.prompt
-      });
+      // Pre-load the image to make sure it's valid
+      const img = new Image();
+      img.onload = () => {
+        console.log("Image loaded successfully:", imageUrl);
+        onGenerate({
+          imageUrl,
+          prompt: values.prompt
+        });
+        toast.success("Drawing generated successfully!");
+        setIsLoading(false);
+      };
       
-      toast.success("Drawing generated successfully!");
+      img.onerror = () => {
+        console.error("Failed to load image:", imageUrl);
+        toast.error("Failed to generate valid drawing. Please try again.");
+        setIsLoading(false);
+      };
+      
+      img.src = imageUrl;
     } catch (error) {
       console.error("Generation error:", error);
       toast.error("Failed to generate drawing. Please try again later.");
+      setIsLoading(false);
     } finally {
       setIsGenerating(false);
     }

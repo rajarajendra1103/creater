@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Download, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,10 +15,15 @@ interface GeneratedImage {
 const Generator = () => {
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
 
   const handleGenerate = (result: GeneratedImage) => {
-    setGeneratedImages([result, ...generatedImages]);
-    setSelectedImageIndex(0);
+    if (result && result.imageUrl) {
+      setGeneratedImages([result, ...generatedImages]);
+      setSelectedImageIndex(0);
+    } else {
+      toast.error("Failed to generate image");
+    }
   };
 
   const handleDownload = async (imageUrl: string) => {
@@ -80,10 +86,16 @@ const Generator = () => {
                     <TabsTrigger value="advanced">Advanced</TabsTrigger>
                   </TabsList>
                   <TabsContent value="basic" className="mt-0">
-                    <TextPromptForm onGenerate={handleGenerate} />
+                    <TextPromptForm 
+                      onGenerate={handleGenerate} 
+                      setIsLoading={setIsImageLoading}
+                    />
                   </TabsContent>
                   <TabsContent value="advanced" className="mt-0">
-                    <TextPromptForm onGenerate={handleGenerate} />
+                    <TextPromptForm 
+                      onGenerate={handleGenerate}
+                      setIsLoading={setIsImageLoading}
+                    />
                   </TabsContent>
                 </Tabs>
               </CardContent>
@@ -97,11 +109,21 @@ const Generator = () => {
                 {selectedImageIndex !== null && generatedImages.length > 0 ? (
                   <div className="flex flex-col h-full">
                     <div className="relative overflow-hidden rounded-lg bg-secondary/30 flex-grow mb-4 flex items-center justify-center">
-                      <img 
-                        src={generatedImages[selectedImageIndex].imageUrl}
-                        alt={generatedImages[selectedImageIndex].prompt}
-                        className="object-contain max-w-full max-h-[500px] w-auto h-auto"
-                      />
+                      {isImageLoading ? (
+                        <div className="flex items-center justify-center w-full h-full">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                        </div>
+                      ) : (
+                        <img 
+                          src={generatedImages[selectedImageIndex].imageUrl}
+                          alt={generatedImages[selectedImageIndex].prompt}
+                          className="object-contain max-w-full max-h-[500px] w-auto h-auto"
+                          onError={() => {
+                            toast.error("Failed to load image");
+                            console.error("Image load error");
+                          }}
+                        />
+                      )}
                     </div>
                     
                     <div className="flex justify-between items-center mb-4">
