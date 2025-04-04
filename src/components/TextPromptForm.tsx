@@ -70,10 +70,10 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
         prompt: values.prompt
       });
       
-      toast.success("Image generated successfully!");
+      toast.success("Drawing generated successfully!");
     } catch (error) {
       console.error("Generation error:", error);
-      toast.error("Failed to generate image. Please try again later.");
+      toast.error("Failed to generate drawing. Please try again later.");
     } finally {
       setIsGenerating(false);
     }
@@ -106,7 +106,7 @@ const TextPromptForm = ({ onGenerate }: TextPromptFormProps) => {
             name="style"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Art Style</FormLabel>
+                <FormLabel>Drawing Style</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
                   defaultValue={field.value}

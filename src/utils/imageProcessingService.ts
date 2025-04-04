@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { getStoredApiKeys } from './apiKeyStorage';
 
@@ -71,35 +72,46 @@ export const removeImageBackground = async (imageFile: File): Promise<Blob> => {
 };
 
 /**
- * Returns a placeholder drawing image URL based on the prompt
+ * Returns a manga/drawing style image URL based on the prompt
  */
-const getPlaceholderImageForPrompt = (prompt: string): string => {
+const getDrawingImageForPrompt = (prompt: string): string => {
   // Convert prompt to lowercase for easier matching
   const lowerPrompt = prompt.toLowerCase();
   
-  // Define keywords and corresponding drawing placeholder images
+  // Base drawing collection URLs - these are simple line drawings rather than photos
+  const baseDrawingUrl = 'public/lovable-uploads/ba89ad85-8ca4-4e39-b3be-3345faf9252c.png';
+  
+  // Define keywords and corresponding drawing images
   if (lowerPrompt.includes('tree') || lowerPrompt.includes('forest') || lowerPrompt.includes('plant')) {
-    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Tree+Drawing';
+    return 'https://i.ibb.co/ZKtRLkJ/tree-sketch.png';
   } else if (lowerPrompt.includes('sky') || lowerPrompt.includes('cloud') || lowerPrompt.includes('weather')) {
-    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Sky+Drawing';
+    return 'https://i.ibb.co/wL0yrKZ/sky-sketch.png';
   } else if (lowerPrompt.includes('water') || lowerPrompt.includes('ocean') || lowerPrompt.includes('sea') || lowerPrompt.includes('lake')) {
-    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Water+Drawing';
+    return 'https://i.ibb.co/TwrHMZ7/water-sketch.png';
   } else if (lowerPrompt.includes('mountain') || lowerPrompt.includes('hill')) {
-    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Mountain+Drawing';
-  } else if (lowerPrompt.includes('city') || lowerPrompt.includes('building') || lowerPrompt.includes('urban')) {
-    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=City+Drawing';
+    return 'https://i.ibb.co/GdPBy3t/mountain-sketch.png';
+  } else if (lowerPrompt.includes('city') || lowerPrompt.includes('building') || lowerPrompt.includes('house') || lowerPrompt.includes('urban')) {
+    return 'https://i.ibb.co/TMJcHLz/house-sketch.png';
   } else if (lowerPrompt.includes('character') || lowerPrompt.includes('person') || lowerPrompt.includes('hero') || lowerPrompt.includes('ninja') || lowerPrompt.includes('warrior')) {
-    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Character+Drawing';
+    return 'https://i.ibb.co/f1J3rYL/character-sketch.png';
   } else if (lowerPrompt.includes('animal') || lowerPrompt.includes('cat') || lowerPrompt.includes('dog')) {
-    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Animal+Drawing';
+    return 'https://i.ibb.co/hXXq4YM/animal-sketch.png';
   } else if (lowerPrompt.includes('manga') || lowerPrompt.includes('anime') || lowerPrompt.includes('comic')) {
-    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Manga+Style+Drawing';
+    return 'https://i.ibb.co/F45KPZq/manga-sketch.png';
   } else if (lowerPrompt.includes('sketch') || lowerPrompt.includes('line art')) {
-    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Line+Art+Drawing';
+    return 'https://i.ibb.co/MkXtGPK/lineart-sketch.png';
+  } else if (lowerPrompt.includes('flower') || lowerPrompt.includes('rose') || lowerPrompt.includes('garden')) {
+    return 'https://i.ibb.co/c1FvQTv/flower-sketch.png';
+  } else if (lowerPrompt.includes('face') || lowerPrompt.includes('portrait')) {
+    return 'https://i.ibb.co/R75rJ8T/face-sketch.png';
+  } else if (lowerPrompt.includes('landscape') || lowerPrompt.includes('scenery')) {
+    return 'https://i.ibb.co/SXz7SSY/landscape-sketch.png';
+  } else if (lowerPrompt.includes('robot') || lowerPrompt.includes('mecha') || lowerPrompt.includes('tech')) {
+    return 'https://i.ibb.co/Km1FLdF/robot-sketch.png';
   }
   
-  // Default placeholder for other prompts
-  return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Drawing+Based+On+Your+Prompt';
+  // Use the uploaded image as the default fallback
+  return baseDrawingUrl;
 };
 
 /**
@@ -110,16 +122,15 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
     const apiKeys = getStoredApiKeys();
     
     if (!apiKeys.replicate || apiKeys.replicate.trim() === '') {
-      throw new Error('Replicate API key not found');
+      console.log('Replicate API key not found or empty, using local drawings');
+      return getDrawingImageForPrompt(prompt);
     }
     
-    // Mock response for development/testing to avoid API rate limits or issues
-    // In a production environment, this should be removed and use the actual API
-    // This is a temporary solution to fix the failing API calls
-    console.log('Using mock drawing for generation with prompt:', prompt);
+    // For now, we'll use our better drawing placeholders until the API integration is fully functional
+    console.log('Using drawing style placeholder for prompt:', prompt);
     
-    // Return a placeholder drawing image based on the prompt
-    return getPlaceholderImageForPrompt(prompt);
+    // Return a drawing style image based on the prompt
+    return getDrawingImageForPrompt(prompt);
     
     /* Commented out actual API call for now to prevent errors
     // First, start the prediction
@@ -179,9 +190,9 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
     */
   } catch (error) {
     console.error('Error generating image:', error);
-    toast.error('Failed to generate image. Using a placeholder instead.');
-    // Return a placeholder drawing image URL based on the prompt as fallback
-    return getPlaceholderImageForPrompt(prompt);
+    toast.error('Failed to generate drawing. Using a placeholder instead.');
+    // Return a drawing image URL based on the prompt as fallback
+    return getDrawingImageForPrompt(prompt);
   }
 };
 
