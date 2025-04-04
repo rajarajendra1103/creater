@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { getStoredApiKeys } from './apiKeyStorage';
 
@@ -72,31 +71,35 @@ export const removeImageBackground = async (imageFile: File): Promise<Blob> => {
 };
 
 /**
- * Returns a placeholder image URL based on the prompt
+ * Returns a placeholder drawing image URL based on the prompt
  */
 const getPlaceholderImageForPrompt = (prompt: string): string => {
   // Convert prompt to lowercase for easier matching
   const lowerPrompt = prompt.toLowerCase();
   
-  // Define keywords and corresponding placeholder images
+  // Define keywords and corresponding drawing placeholder images
   if (lowerPrompt.includes('tree') || lowerPrompt.includes('forest') || lowerPrompt.includes('plant')) {
-    return 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Tree+Drawing';
   } else if (lowerPrompt.includes('sky') || lowerPrompt.includes('cloud') || lowerPrompt.includes('weather')) {
-    return 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Sky+Drawing';
   } else if (lowerPrompt.includes('water') || lowerPrompt.includes('ocean') || lowerPrompt.includes('sea') || lowerPrompt.includes('lake')) {
-    return 'https://images.unsplash.com/photo-1520116468816-95b69f847357?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Water+Drawing';
   } else if (lowerPrompt.includes('mountain') || lowerPrompt.includes('hill')) {
-    return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Mountain+Drawing';
   } else if (lowerPrompt.includes('city') || lowerPrompt.includes('building') || lowerPrompt.includes('urban')) {
-    return 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=City+Drawing';
   } else if (lowerPrompt.includes('character') || lowerPrompt.includes('person') || lowerPrompt.includes('hero') || lowerPrompt.includes('ninja') || lowerPrompt.includes('warrior')) {
-    return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Character+Drawing';
   } else if (lowerPrompt.includes('animal') || lowerPrompt.includes('cat') || lowerPrompt.includes('dog')) {
-    return 'https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Animal+Drawing';
+  } else if (lowerPrompt.includes('manga') || lowerPrompt.includes('anime') || lowerPrompt.includes('comic')) {
+    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Manga+Style+Drawing';
+  } else if (lowerPrompt.includes('sketch') || lowerPrompt.includes('line art')) {
+    return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Line+Art+Drawing';
   }
   
   // Default placeholder for other prompts
-  return 'https://images.unsplash.com/photo-1573589896812-d5a54f5e1b0a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
+  return 'https://dummyimage.com/1000x800/ffffff/000000.png&text=Drawing+Based+On+Your+Prompt';
 };
 
 /**
@@ -113,9 +116,9 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
     // Mock response for development/testing to avoid API rate limits or issues
     // In a production environment, this should be removed and use the actual API
     // This is a temporary solution to fix the failing API calls
-    console.log('Using mock image for generation with prompt:', prompt);
+    console.log('Using mock drawing for generation with prompt:', prompt);
     
-    // Return a placeholder image based on the prompt
+    // Return a placeholder drawing image based on the prompt
     return getPlaceholderImageForPrompt(prompt);
     
     /* Commented out actual API call for now to prevent errors
@@ -177,7 +180,7 @@ export const generateImageFromPrompt = async (prompt: string): Promise<string> =
   } catch (error) {
     console.error('Error generating image:', error);
     toast.error('Failed to generate image. Using a placeholder instead.');
-    // Return a placeholder image URL based on the prompt as fallback
+    // Return a placeholder drawing image URL based on the prompt as fallback
     return getPlaceholderImageForPrompt(prompt);
   }
 };
